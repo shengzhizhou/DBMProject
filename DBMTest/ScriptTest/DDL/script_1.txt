@@ -1,0 +1,15 @@
+USE [Version_test]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[testTable](
+	[idTest] [varchar](50) NOT NULL,
+	[nameTest] [varchar](50) NULL,
+	[dateTest] [datetime] NULL
+) ON [PRIMARY]
+GO

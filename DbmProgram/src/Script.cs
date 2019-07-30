@@ -14,28 +14,27 @@ namespace DBMProgram.src
         private int ExecutionOrder;
         private string TicketName;
         private string Description;
-
+        private bool IsMatch;
         public UnexecutedScript(string filePath)
         {
             FilePath = filePath;
             ScriptName = Path.GetFileNameWithoutExtension(filePath);
-
+            if (IsMatchesNameConvention())
+            {
+                DecodeName();
+                IsMatch = true;
+            }
+            else IsMatch = false;
         }
-        private void SplitNameConvention()
+        private void DecodeName()
         {
             TicketName = ScriptName.Substring(0, ScriptName.IndexOf('_'));
             ExecutionOrder = Convert.ToInt32(ScriptName.Substring(ScriptName.IndexOf('_') + 1, ScriptName.IndexOf('-') - ScriptName.IndexOf('_') - 1));
-
             Description = ScriptName.Substring(ScriptName.IndexOf('-'));
-
         }
 
-        private void SplitBothNameConvention(UnexecutedScript script2) {
-            SplitNameConvention();
-            script2.SplitNameConvention();
-        }
 
-        public bool MatchesNameConvention()
+        public bool IsMatchesNameConvention()
         {
             Regex rgx = new Regex(@"^([a-zA-Z0-9]+)(_\d+)(-[a-zA-Z0-9]+)$");
             return rgx.IsMatch(ScriptName);
@@ -54,13 +53,12 @@ namespace DBMProgram.src
 
         public int CompareTo(UnexecutedScript script2)
         {
-            if (!(MatchesNameConvention() && script2.MatchesNameConvention()))
+            if (!(IsMatch && script2.IsMatch))
             {
                 return string.Compare(ScriptName, script2.ScriptName);
             }
             else
             {
-                SplitBothNameConvention(script2);
                 int result = TicketName.CompareTo(script2.TicketName);
                 if (result == 0)
                     result = ExecutionOrder.CompareTo(script2.ExecutionOrder);

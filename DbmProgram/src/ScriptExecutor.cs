@@ -20,7 +20,7 @@ namespace DBMProgram.src
         }
         public override string ToString()
         {
-            return $"{scriptName} : {IsSuccess}\nRowsEffected : {rowsEffected}\n";
+            return $"{scriptName} : {(IsSuccess?"Success":"Failure")}\nRowsEffected : {rowsEffected}\n";
         }
     }
     public interface IScriptExecutor
@@ -46,10 +46,10 @@ namespace DBMProgram.src
         {
             SqlConnection sqlCon = new SqlConnection(@ConnString);
             sqlCon.Open();
-            string sql = $"INSERT INTO [dbo].[version] ([id] ,[script_name] ,[applied_date]) " +
-                $"VALUES (@scriptID ,@scriptName,@AppliedDate)";
+            string sql = $"INSERT INTO [dbo].[version]" +
+                $"VALUES (@scriptName,@AppliedDate)";
             SqlCommand command = new SqlCommand(sql, sqlCon);
-            command.Parameters.AddWithValue("@scriptID", "113");
+            //command.Parameters.AddWithValue("@scriptID", "113");
             command.Parameters.AddWithValue("@scriptName", scripts.ScriptName);
             SqlParameter parameter = command.Parameters.AddWithValue("@AppliedDate", SqlDbType.DateTime);
             parameter.Value = DateTime.Now;

@@ -24,12 +24,20 @@ namespace DBMProgram.src
             this.scriptExecutor = scriptExecutor;
         }
 
-        private void ExitProgram(string exitMessage,int exitCode) {
+        private void ExitSuccessProgram(string exitMessage, int exitCode)
+        {
             message.WriteMessage(exitMessage);
             Environment.Exit(exitCode);
         }
 
-        private void RunOnlyDdlOrDmlScript(Options opts) {
+        private void ExitFailureProgram(string exitMessage, int exitCode)
+        {
+            message.WriteError(exitMessage);
+            Environment.Exit(exitCode);
+        }
+
+        private void RunOnlyDdlOrDmlScript(Options opts)
+        {
             message.WriteMessage(opts.RootPath);
             List<UnexecutedScript> unexecutedScript = (List<UnexecutedScript>)scriptExecutor.GetUnexecutedScripts(opts);
             foreach (ScriptExecutionResult result in scriptExecutor.RunBatches(unexecutedScript, opts.ConnString))
@@ -37,7 +45,7 @@ namespace DBMProgram.src
                 message.WriteMessage(result.ToString());
                 if (!result.IsSuccess)
                 {
-                    ExitProgram($"Overall Status: failure\n{result.errorMessage}\n", 0);
+                    ExitFailureProgram($"Overall Status: failure\n{result.errorMessage}\n", 0);
                 }
             }
         }
@@ -48,16 +56,16 @@ namespace DBMProgram.src
             // validaten parameters
             if (!(opts.IsValidConn() && opts.IsValidPath()))
             {
-                ExitProgram($"Overall Status: failure\n{(opts.IsValidConn() ? "RootPath" : "Connection String")} Argument is not valid",0);
+                ExitFailureProgram($"Overall Status: failure\n{(opts.IsValidConn() ? "RootPath" : "Connection String")} Argument is not valid", 0);
             }
 
             // assert ddl and dml exist        
 
-            opts.RootPath = rootPath+"\\ddl";
-                RunOnlyDdlOrDmlScript(opts);
-            opts.RootPath = rootPath+"\\dml";
+            opts.RootPath = rootPath + "\\ddl";
             RunOnlyDdlOrDmlScript(opts);
-            ExitProgram("\nOverall Status: success",0);
+            opts.RootPath = rootPath + "\\dml";
+            RunOnlyDdlOrDmlScript(opts);
+            ExitSuccessProgram("\nOverall Status: success", 0);
         }
     }
 
@@ -109,8 +117,6 @@ namespace DBMProgram.src
         {
             UnityContainer ScriptContainer = Factory.ConfigureContainer();
             ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
-
-
             scriptController.RunScript(opts);
         }
         private static void HandleParseError(IEnumerable<Error> errs)

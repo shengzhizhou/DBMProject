@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ScriptTest\DML\" />
+    <Folder Include="ScriptTest\dml\" />
   </ItemGroup>
 
 </Project>

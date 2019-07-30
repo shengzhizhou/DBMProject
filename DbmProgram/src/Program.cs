@@ -24,30 +24,40 @@ namespace DBMProgram.src
             this.scriptExecutor = scriptExecutor;
         }
 
-        public void RunScript(Options opts)
-        {
-            // validaten parameters
-            if (!(opts.IsValidConn() && opts.IsValidPath()))
-                throw new ArgumentException("{0} Argument is not valid", opts.IsValidConn()?"Connection String":"RootPath");
+        private void ExitProgram(string exitMessage,int exitCode) {
+            message.WriteMessage(exitMessage);
+            Environment.Exit(exitCode);
+        }
 
-            // assert ddl and dml exist        
-            string[] dirs = Directory.GetDirectories(@opts.RootPath, "*", SearchOption.TopDirectoryOnly);
-            foreach (string subDir in dirs)
+        private void RunOnlyDdlOrDmlScript(Options opts) {
+            message.WriteMessage(opts.RootPath);
+            List<UnexecutedScript> unexecutedScript = (List<UnexecutedScript>)scriptExecutor.GetUnexecutedScripts(opts);
+            foreach (ScriptExecutionResult result in scriptExecutor.RunBatches(unexecutedScript, opts.ConnString))
             {
-                opts.RootPath = subDir;
-                List<UnexecutedScript> unexecutedScript = (List<UnexecutedScript>)scriptExecutor.GetUnexecutedScripts(opts);
-                foreach (ScriptExecutionResult result in scriptExecutor.RunBatches(unexecutedScript, opts.ConnString))
+                message.WriteMessage(result.ToString());
+                if (!result.IsSuccess)
                 {
-                    message.WriteMessage(result.ToString());
-                    if (!result.IsSuccess)
-                    {
-                        message.WriteError($"Overall Status: failure\n{result.errorMessage}\n");
-                        Environment.Exit(0);
-                    }
+                    ExitProgram($"Overall Status: failure\n{result.errorMessage}\n", 0);
                 }
             }
-            message.WriteMessage("\nOverall Status: success");
-            Environment.Exit(0);
+        }
+
+        public void RunScript(Options opts)
+        {
+            string rootPath = opts.RootPath;
+            // validaten parameters
+            if (!(opts.IsValidConn() && opts.IsValidPath()))
+            {
+                ExitProgram($"Overall Status: failure\n{(opts.IsValidConn() ? "RootPath" : "Connection String")} Argument is not valid",0);
+            }
+
+            // assert ddl and dml exist        
+
+            opts.RootPath = rootPath+"\\ddl";
+                RunOnlyDdlOrDmlScript(opts);
+            opts.RootPath = rootPath+"\\dml";
+            RunOnlyDdlOrDmlScript(opts);
+            ExitProgram("\nOverall Status: success",0);
         }
     }
 
@@ -61,7 +71,7 @@ namespace DBMProgram.src
         public bool IsValidPath()
         {
             string[] subdirectoryEntries = Directory.GetDirectories(RootPath);
-            if (subdirectoryEntries.Length == 2 && subdirectoryEntries.Contains(RootPath + "\\DDL") && subdirectoryEntries.Contains(RootPath + "\\DML"))
+            if (subdirectoryEntries.Length == 2 && subdirectoryEntries.Contains(RootPath + "\\ddl") && subdirectoryEntries.Contains(RootPath + "\\dml"))
             {
                 return true;
             }
@@ -99,6 +109,8 @@ namespace DBMProgram.src
         {
             UnityContainer ScriptContainer = Factory.ConfigureContainer();
             ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
+
+
             scriptController.RunScript(opts);
         }
         private static void HandleParseError(IEnumerable<Error> errs)

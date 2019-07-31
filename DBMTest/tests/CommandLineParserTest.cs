@@ -10,16 +10,27 @@ namespace DBMTest.tests
     {
         readonly bool FailurePaser = false;
         readonly bool SuccessParser = true;
-        
+
         [Fact]
         public void CommandLineParser_TwoCorrectArgs_SuccessResult()
         {
-            string[] args =new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
-            bool result=false;
+            string[] args = new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
+            bool result = false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
     .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(SuccessParser,result);
+            Assert.Equal(SuccessParser, result);
+        }
+
+        [Fact]
+        public void CommandLineParser_ThreeCorrectArgs_SuccessResult()
+        {
+            string[] args = new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Integrated Security = True;", "--dbname", "version_test" };
+            bool result = false;
+            CommandLine.Parser.Default.ParseArguments<Options>(args)
+    .WithParsed<Options>(opts => { result = true; })
+    .WithNotParsed<Options>((errs) => { result = false; });
+            Assert.Equal(SuccessParser, result);
         }
 
         [Fact]
@@ -37,6 +48,17 @@ namespace DBMTest.tests
         public void CommandLineParser_MissingConnectionString_FailureResult()
         {
             string[] args = new string[] { "-r", "\\ScriptTest" };
+            bool result = false;
+            CommandLine.Parser.Default.ParseArguments<Options>(args)
+    .WithParsed<Options>(opts => { result = true; })
+    .WithNotParsed<Options>((errs) => { result = false; });
+            Assert.Equal(FailurePaser, result);
+        }
+
+        [Fact]
+        public void CommandLineParser_GivenOptionalDatabaseName_FailureResult()
+        {
+            string[] args = new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Integrated Security = True;", "--dbname", "WrongVersion" };
             bool result = false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
@@ -65,5 +87,7 @@ namespace DBMTest.tests
     .WithNotParsed<Options>((errs) => { result = false; });
             Assert.Equal(FailurePaser, result);
         }
+
+
     }
 }

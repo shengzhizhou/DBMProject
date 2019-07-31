@@ -24,7 +24,7 @@ namespace DBMProgram.src
             this.scriptExecutor = scriptExecutor;
         }
 
-        private void ExitSuccessProgram(string exitMessage, int exitCode)
+        public void ExitSuccessProgram(string exitMessage, int exitCode)
         {
             message.WriteMessage(exitMessage);
             Environment.Exit(exitCode);
@@ -58,9 +58,7 @@ namespace DBMProgram.src
             {
                 ExitFailureProgram($"Overall Status: failure\n{(opts.IsValidConn() ? "RootPath" : "Connection String")} Argument is not valid", 0);
             }
-
-            // assert ddl and dml exist        
-
+            // assert ddl and dml exist     
             opts.RootPath = rootPath + "\\ddl";
             RunOnlyDdlOrDmlScript(opts);
             opts.RootPath = rootPath + "\\dml";
@@ -77,7 +75,9 @@ namespace DBMProgram.src
         [Option('c', "conn", Required = true, HelpText = "Connection String to SQL Server")]
         public string ConnString { get; set; }
 
-        
+        [Option('d', "dbname", Required = false, HelpText = "Specific name of Database that contains Version table")]
+        public string DbName { get; set; }
+
         public bool IsValidPath()
         {
             string[] subdirectoryEntries = Directory.GetDirectories(RootPath);
@@ -91,6 +91,12 @@ namespace DBMProgram.src
         {
             try
             {
+                if (DbName != null)
+                {
+                    SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(ConnString);
+                    builder.InitialCatalog = DbName;
+                    ConnString = builder.ConnectionString;
+                }
                 SqlConnection sqlCon = new SqlConnection(ConnString);
                 sqlCon.Open();
                 sqlCon.Close();

@@ -39,7 +39,27 @@ messages from script execution (to STDOUT if successful or STDERR if failed)
 database record of each script execution if successful - overall status of the batch to STDOUT or STERROR (if all successful the sucess else failure)
 # Instruction
 
-Database Simple Schema
+Cmd Usage
+```
+  -r, --root      Required. Input file to read.
+
+  -c, --conn      Required. Connection String to SQL Server
+
+  -d, --dbname    Specific name of Database that contains Version table
+
+  --help          Display this help screen.
+
+  --version       Display version information.
+```
+Cmd Example
+```
+dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Initial Catalog=Version_test;Integrated Security=True;"
+```
+OR
+```
+dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Integrated Security=True;" --dbname Version_test
+```
+Version Table Sample Schema
 
 ```
 

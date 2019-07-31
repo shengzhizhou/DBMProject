@@ -76,6 +76,8 @@ namespace DBMProgram.src
 
         [Option('c', "conn", Required = true, HelpText = "Connection String to SQL Server")]
         public string ConnString { get; set; }
+
+        
         public bool IsValidPath()
         {
             string[] subdirectoryEntries = Directory.GetDirectories(RootPath);

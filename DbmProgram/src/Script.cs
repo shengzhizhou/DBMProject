@@ -39,7 +39,7 @@ namespace DBMProgram.src
             Regex rgx = new Regex(@"^([a-zA-Z0-9]+)(_\d+)(-[a-zA-Z0-9]+)$");
             return rgx.IsMatch(ScriptName);
         }
-        public bool Skip()
+        public bool IsSkip()
         {
             return ScriptName.StartsWith('X') || ScriptName.StartsWith('x');
         }

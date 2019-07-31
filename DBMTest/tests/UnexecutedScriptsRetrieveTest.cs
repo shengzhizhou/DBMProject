@@ -9,24 +9,29 @@ namespace DBMTest.tests
     public class UnexecutedScriptsRetrieveTest
     {
         readonly string subDirPath = "..\\..\\..\\ScriptTest\\DDL";
-        readonly bool CorrectResult = true;
+        readonly bool SuccessResult = true;
 
         [Fact]
-        public void GetAllScriptsTest_CorrectLocalUnexecutedFiles_CorrectResult()
+        public void GetAllScripts_CorrectLocalUnexecutedFiles_AssertSuccessResult()
         {
             UnityContainer ScriptContainer = Factory.ConfigureContainer();
             IScriptExecutor scriptExecutor = ScriptContainer.Resolve<SqlServerScriptExecutor>();
-            List<UnexecutedScript> actulScripts = (List<UnexecutedScript>)scriptExecutor.GetAllScripts(subDirPath);
-            bool result = true;
-
-            //List<Script> trueScript = new List<Script>() { new Script($"{relativePath}\\newScript"), new Script($"{relativePath}\\script_1"), new Script($"{relativePath}\\script_2") };
-            foreach (UnexecutedScript script in actulScripts) {
-                if (!(script.ScriptName == "script_1" || script.ScriptName == "script_2"))
-                    result = false;
+            foreach (UnexecutedScript script in scriptExecutor.GetAllScripts(subDirPath)) {
+                if (!(script.ScriptName == "newScript"||script.ScriptName == "script_1" || script.ScriptName == "script_2"))
+                    Assert.False(SuccessResult);
             }
+            Assert.True(SuccessResult);
+        }
 
-            Assert.Equal(CorrectResult, result);
-        } 
+        [Fact]
+        public void SkipSpecificScript_GivenSkipScript_AssertSuccessResult()
+        {
+            var script1 = new UnexecutedScript("X_MCRA_10101-A");
+            if(!script1.IsSkip())
+                Assert.False(SuccessResult);
+            Assert.True(SuccessResult);
+        }
+
     }
 
     

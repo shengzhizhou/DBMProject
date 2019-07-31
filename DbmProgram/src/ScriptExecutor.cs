@@ -118,7 +118,7 @@ namespace DBMProgram.src
                 if (!AppliedScript.Contains(script.ScriptName))
                 {
                     script.LoadScript();
-                    if (!script.Skip())
+                    if (!script.IsSkip())
                         unexecutedScript.Add(script);
                     output = output + "  " + script.ScriptName;
                 }

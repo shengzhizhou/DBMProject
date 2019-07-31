@@ -8,62 +8,62 @@ namespace DBMTest.tests
 {
     public class ArgsParserTest
     {
-        readonly bool BadResult = false;
-        readonly bool CorrectResult = true;
+        readonly bool FailurePaser = false;
+        readonly bool SuccessParser = true;
         
         [Fact]
-        public void CommandLineParser_TwoCorrectArgs_CorrectResult()
+        public void CommandLineParser_TwoCorrectArgs_SuccessResult()
         {
             string[] args =new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
             bool result=false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
     .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(CorrectResult,result);
+            Assert.Equal(SuccessParser,result);
         }
 
         [Fact]
-        public void CommandLineParser_MissingRootPath_BadResult()
+        public void CommandLineParser_MissingRootPath_FailureResult()
         {
             string[] args = new string[] { "-c", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
             bool result = false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
     .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(BadResult, result);
+            Assert.Equal(FailurePaser, result);
         }
 
         [Fact]
-        public void CommandLineParser_MissingConnectionString_BadResult()
+        public void CommandLineParser_MissingConnectionString_FailureResult()
         {
             string[] args = new string[] { "-r", "\\ScriptTest" };
             bool result = false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
     .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(BadResult, result);
+            Assert.Equal(FailurePaser, result);
         }
 
         [Fact]
-        public void CommandLineParser_EmptyArgs_BadResult()
+        public void CommandLineParser_EmptyArgs_FailureResult()
         {
             string[] args = new string[] { "" };
             bool result = false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
     .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(BadResult, result);
+            Assert.Equal(FailurePaser, result);
         }
 
         [Fact]
-        public void CommandLineParser_TwoWrongArgs_BadResult()
+        public void CommandLineParser_TwoWrongArgs_FailureResult()
         {
             string[] args = new string[] { "-f", "\\script", "-d", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
             bool result = false;
             CommandLine.Parser.Default.ParseArguments<Options>(args)
     .WithParsed<Options>(opts => { result = true; })
     .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(BadResult, result);
+            Assert.Equal(FailurePaser, result);
         }
     }
 }

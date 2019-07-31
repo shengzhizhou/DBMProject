@@ -10,8 +10,8 @@ namespace DBMProgram.src
     public class ScriptExecutionResult
     {
         readonly string scriptName;
-        public bool IsSuccess = false;
-        public int rowsEffected = 0;
+        public bool IsSuccess;
+        public int rowsEffected;
         public string errorMessage;
 
         public ScriptExecutionResult(string scriptName)
@@ -20,14 +20,14 @@ namespace DBMProgram.src
         }
         public override string ToString()
         {
-            return $"{scriptName} : {(IsSuccess?"Success":"Failure")}\nRowsEffected : {rowsEffected}\n";
+            return $"{scriptName} : {(IsSuccess ? "Success" : "Failure")}\nRowsEffected : {rowsEffected}\n";
         }
     }
     public interface IScriptExecutor
     {
         void AddScriptRecords(UnexecutedScript scripts, string ConnString);
         IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString);
-        IEnumerable<UnexecutedScript> GetUnexecutedScripts(Options opts);
+        IEnumerable<UnexecutedScript> GetUnexecutedScripts(string rootPath, string connString);
         IEnumerable<UnexecutedScript> GetAllScripts(string rootPath);
         IEnumerable<ExecutedScript> GetExecutedScripts(String connString);
         IEnumerable<string> GetExecutedScriptNames(string connString);
@@ -44,17 +44,20 @@ namespace DBMProgram.src
         //Add unexecuted script file name to Version table
         public void AddScriptRecords(UnexecutedScript scripts, string ConnString)
         {
-            SqlConnection sqlCon = new SqlConnection(@ConnString);
-            sqlCon.Open();
-            string sql = $"INSERT INTO [dbo].[version]" +
-                $"VALUES (@scriptName,@AppliedDate)";
-            SqlCommand command = new SqlCommand(sql, sqlCon);
-            //command.Parameters.AddWithValue("@scriptID", "113");
-            command.Parameters.AddWithValue("@scriptName", scripts.ScriptName);
-            SqlParameter parameter = command.Parameters.AddWithValue("@AppliedDate", SqlDbType.DateTime);
-            parameter.Value = DateTime.Now;
-            command.ExecuteNonQuery();
-            sqlCon.Close();
+            using (SqlConnection sqlCon = new SqlConnection(@ConnString))
+            {
+                sqlCon.Open();
+                string sql = $"INSERT INTO [dbo].[version]" +
+                    $"VALUES (@scriptName,@AppliedDate)";
+                using (SqlCommand command = new SqlCommand(sql, sqlCon))
+                {
+                    //command.Parameters.AddWithValue("@scriptID", "113");
+                    command.Parameters.AddWithValue("@scriptName", scripts.ScriptName);
+                    SqlParameter parameter = command.Parameters.AddWithValue("@AppliedDate", SqlDbType.DateTime);
+                    parameter.Value = DateTime.Now;
+                    command.ExecuteNonQuery();
+                }
+            }
         }
 
         public ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString)
@@ -96,7 +99,6 @@ namespace DBMProgram.src
         //run batches of each unexecuted script file
         public IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString)
         {
-
             foreach (UnexecutedScript script in unexecutedScripts)
             {
                 var executionResult = RunSignleScriptBatchs(script, ConnString);
@@ -106,12 +108,12 @@ namespace DBMProgram.src
         }
 
         //get all local unexecuted script file
-        public IEnumerable<UnexecutedScript> GetUnexecutedScripts(Options opts)
+        public IEnumerable<UnexecutedScript> GetUnexecutedScripts(string rootPath, string connString)
         {
             List<UnexecutedScript> unexecutedScript = new List<UnexecutedScript>();
-            List<string> AppliedScript = (List<string>)GetExecutedScriptNames(opts.ConnString);
+            List<string> AppliedScript = (List<string>)GetExecutedScriptNames(connString);
             string output = "";
-            foreach (UnexecutedScript script in GetAllScripts(opts.RootPath))
+            foreach (UnexecutedScript script in GetAllScripts(rootPath))
             {
                 if (!AppliedScript.Contains(script.ScriptName))
                 {
@@ -122,7 +124,6 @@ namespace DBMProgram.src
                 }
             }
             unexecutedScript.Sort();
-
             message.WriteMessage($"unexecuted Script: {output}\n");
             return unexecutedScript;
         }
@@ -138,24 +139,30 @@ namespace DBMProgram.src
         //retrieve script table from sql server
         public IEnumerable<string> GetExecutedScriptNames(String connString)
         {
-            SqlConnection sqlCon = new SqlConnection(@connString);
-            sqlCon.Open();
-            string output = "";
             string sql = $"select * from version";
-            SqlCommand command = new SqlCommand(sql, sqlCon);
-            SqlDataReader dataReader = command.ExecuteReader();
-            List<string> executedScript = new List<string>();
-
-            while (dataReader.Read())
+            using (var sqlCon = new SqlConnection(@connString))
             {
-                int nameOrdinal = dataReader.GetOrdinal("script_name");
-                executedScript.Add(dataReader.GetValue(nameOrdinal).ToString());
-                output = output + "  " + dataReader.GetValue(nameOrdinal);
+                using (var command = new SqlCommand(sql, sqlCon))
+                {
+                    sqlCon.Open();
+                    string output = "";
+                    using (SqlDataReader dataReader = command.ExecuteReader())
+                    {
+                        List<string> executedScript = new List<string>();
+                        while (dataReader.Read())
+                        {
+                            int nameOrdinal = dataReader.GetOrdinal("script_name");
+                            executedScript.Add(dataReader.GetValue(nameOrdinal).ToString());
+                            output = output + "  " + dataReader.GetValue(nameOrdinal);
 
+                        }
+                        message.WriteMessage($"\nexecuted Script: {output}");
+                        //sqlCon.Close();
+                        return executedScript;
+                    }
+                }
             }
-            message.WriteMessage($"\nexecuted Script: {output}");
-            sqlCon.Close();
-            return executedScript;
+
         }
 
         public IEnumerable<ExecutedScript> GetExecutedScripts(string connString)

@@ -39,7 +39,7 @@ namespace DBMProgram.src
         private void RunOnlyDdlOrDmlScript(Options opts)
         {
             message.WriteMessage(opts.RootPath);
-            List<UnexecutedScript> unexecutedScript = (List<UnexecutedScript>)scriptExecutor.GetUnexecutedScripts(opts);
+            List<UnexecutedScript> unexecutedScript = (List<UnexecutedScript>)scriptExecutor.GetUnexecutedScripts(opts.RootPath, opts.ConnString);
             foreach (ScriptExecutionResult result in scriptExecutor.RunBatches(unexecutedScript, opts.ConnString))
             {
                 message.WriteMessage(result.ToString());

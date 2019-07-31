@@ -14,19 +14,19 @@ namespace DBMProgram.src
         private int ExecutionOrder;
         private string TicketName;
         private string Description;
-        private bool IsMatch;
+        readonly bool IsMatch;
         public UnexecutedScript(string filePath)
         {
             FilePath = filePath;
             ScriptName = Path.GetFileNameWithoutExtension(filePath);
             if (IsMatchesNameConvention())
             {
-                DecodeName();
+                SplitNameByConvention();
                 IsMatch = true;
             }
             else IsMatch = false;
         }
-        private void DecodeName()
+        private void SplitNameByConvention()
         {
             TicketName = ScriptName.Substring(0, ScriptName.IndexOf('_'));
             ExecutionOrder = Convert.ToInt32(ScriptName.Substring(ScriptName.IndexOf('_') + 1, ScriptName.IndexOf('-') - ScriptName.IndexOf('_') - 1));
@@ -41,7 +41,7 @@ namespace DBMProgram.src
         }
         public bool Skip()
         {
-            return ScriptName.StartsWith('X');
+            return ScriptName.StartsWith('X') || ScriptName.StartsWith('x');
         }
 
         public void LoadScript()

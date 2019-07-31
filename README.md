@@ -45,8 +45,6 @@ Cmd Usage
 
   -c, --conn      Required. Connection String to SQL Server
 
-  -d, --dbname    Specific name of Database that contains Version table
-
   --help          Display this help screen.
 
   --version       Display version information.
@@ -55,21 +53,16 @@ Cmd Example
 ```
 dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Initial Catalog=Version_test;Integrated Security=True;"
 ```
-OR
-```
-dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Integrated Security=True;" --dbname Version_test
-```
 Version Table Sample Schema
 
 ```
-
 CREATE TABLE [dbo].[version](
 	
-[id] [int] IDENTITY(1,1) NOT NULL,
+	[id] [int] IDENTITY(1,1) NOT NULL,
 	
-[script_name] [varchar](50) NULL,
+	[script_name] [varchar](50) NULL,
 	
-[applied_date] [datetime] NULL
+	[applied_date] [datetime] NULL
 ) 
 ON [PRIMARY]
 

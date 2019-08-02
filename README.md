@@ -51,13 +51,6 @@ Cmd Usage
 -s, --snapshot    Do you want to recover your data?
 
 -v, --sub         Subtitute Variable
-
---help          Display this help screen.
-
-
-
---version       Display version information.
-
 ```
 
 Cmd Example
@@ -81,7 +74,7 @@ dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ3
 Substitute Variable
 
 ```
--v var1:val1 var2:val2
+--sub var1:val1 var2:val2
 
 In the script you would look for all instances of $var1$ and $var2$ and substitute with val1 and val2.
 ```

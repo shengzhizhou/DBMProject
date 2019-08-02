@@ -40,24 +40,45 @@ database record of each script execution if successful - overall status of the b
 # Instruction
 
 Cmd Usage
+
 ```
-  -r, --root      Required. Input file to read.
+  
+-r, --root      Required. Input file to read.
 
-  -c, --conn      Required. Connection String to SQL Server
+  
+-c, --conn      Required. Connection String to SQL Server
+  
+  
+-d, --dbname    Not Required. Specific name of Database that contains Version table
 
-  -d, --dbname    Specific name of Database that contains Version table
+  
+-s, --snapshot    Do you want to recover your data?
+-v, --sub         Subtitute Variable
+--help          Display this help screen.
 
-  --help          Display this help screen.
+  
+--version       Display version information.
 
-  --version       Display version information.
 ```
+
 Cmd Example
+
 ```
+
 dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Initial Catalog=Version_test;Integrated Security=True;"
+
 ```
-OR
+
 ```
+
 dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Integrated Security=True;" --dbname Version_test
+
+```
+```
+dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Integrated Security=True;" --dbname Version_test --snapshot
+```
+```
+dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Integrated Security=True;" --sub var1:Version_test var2:test2  --dbname Version_test --snapshot
 ```
 Version Table Sample Schema
 

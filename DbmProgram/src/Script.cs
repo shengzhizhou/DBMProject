@@ -48,6 +48,7 @@ namespace DBMProgram.src
         {
             string text = File.ReadAllText(FilePath);
             Batches = text.Split("GO");
+
         }
 
 

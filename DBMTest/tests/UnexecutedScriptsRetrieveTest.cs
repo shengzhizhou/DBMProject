@@ -24,7 +24,7 @@ namespace DBMTest.tests
         }
 
         [Fact]
-        public void SkipSpecificScript_GivenSkipScript_AssertSuccessResult()
+        public void SkipScript_GivenSkipScript_AssertSuccessResult()
         {
             var script1 = new UnexecutedScript("X_MCRA_10101-A");
             if(!script1.IsSkip())

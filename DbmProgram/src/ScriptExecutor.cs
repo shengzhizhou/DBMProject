@@ -26,11 +26,12 @@ namespace DBMProgram.src
     public interface IScriptExecutor
     {
         void AddScriptRecords(UnexecutedScript scripts, string ConnString);
-        IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString);
+        IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString, IEnumerable<string> substituteList);
         IEnumerable<UnexecutedScript> GetUnexecutedScripts(string rootPath, string connString);
         IEnumerable<UnexecutedScript> GetAllScripts(string rootPath);
         IEnumerable<ExecutedScript> GetExecutedScripts(String connString);
         IEnumerable<string> GetExecutedScriptNames(string connString);
+
     }
 
     public class SqlServerScriptExecutor : IScriptExecutor
@@ -51,7 +52,6 @@ namespace DBMProgram.src
                     $"VALUES (@scriptName,@AppliedDate)";
                 using (SqlCommand command = new SqlCommand(sql, sqlCon))
                 {
-                    //command.Parameters.AddWithValue("@scriptID", "113");
                     command.Parameters.AddWithValue("@scriptName", scripts.ScriptName);
                     SqlParameter parameter = command.Parameters.AddWithValue("@AppliedDate", SqlDbType.DateTime);
                     parameter.Value = DateTime.Now;
@@ -60,7 +60,8 @@ namespace DBMProgram.src
             }
         }
 
-        public ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString)
+
+        public ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString, IEnumerable<string> substituteList)
         {
             var executionResult = new ScriptExecutionResult(script.ScriptName);
 
@@ -74,7 +75,15 @@ namespace DBMProgram.src
                     {
                         if (!string.IsNullOrEmpty(batch))
                         {
-                            using (var command = new SqlCommand(batch, sqlCon))
+                            string replacedBatch = batch;
+                            //Substitute Variable
+                            foreach (string sub in substituteList)
+                            {
+                                string[] var = sub.Split(':');
+                                replacedBatch = replacedBatch.Replace($"${var[0]}$", var[1]);
+                                }
+
+                            using (var command = new SqlCommand(replacedBatch, sqlCon))
                             {
                                 rows += command.ExecuteNonQuery();
                             }
@@ -97,11 +106,11 @@ namespace DBMProgram.src
         }
 
         //run batches of each unexecuted script file
-        public IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString)
+        public IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString, IEnumerable<string> substituteList)
         {
             foreach (UnexecutedScript script in unexecutedScripts)
             {
-                var executionResult = RunSignleScriptBatchs(script, ConnString);
+                var executionResult = RunSignleScriptBatchs(script, ConnString, substituteList);
                 yield return executionResult;
             }
 

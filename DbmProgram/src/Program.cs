@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Data;
 using System.IO;
 using CommandLine;
-using System.Collections;
 using System.Data.SqlClient;
 using Unity;
 
@@ -30,17 +26,41 @@ namespace DBMProgram.src
             Environment.Exit(exitCode);
         }
 
-        private void ExitFailureProgram(string exitMessage, int exitCode)
+        public void ExitFailureProgram(string exitMessage, int exitCode)
         {
             message.WriteError(exitMessage);
             Environment.Exit(exitCode);
+        }
+
+        private void CreateSnapshotDatabase(string connString)
+        {
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(connString);
+            string databaseName = builder.InitialCatalog;
+            string snapshotName = $"{databaseName}_Snapshot";
+
+            using (SqlConnection sqlCon = new SqlConnection(@connString))
+            using (var command = new SqlCommand())
+            {
+                command.Connection = sqlCon;
+                command.CommandText = "select physical_name from sys.database_files where type = 0";
+                sqlCon.Open();
+                string databasePath = command.ExecuteScalar().ToString();
+                string DataDirectory = Path.GetDirectoryName(databasePath);
+                string snapshotFilePath = $"{DataDirectory}\\{databaseName}_Snapshot.ss";
+
+                command.CommandText = $"IF EXISTS  (SELECT name FROM sys.databases WHERE name = '{snapshotName}' ) DROP DATABASE {snapshotName};" +
+                    $"CREATE DATABASE {snapshotName} ON ( " +
+                    $"NAME = {databaseName}, FILENAME = '{snapshotFilePath}' ) AS SNAPSHOT OF {databaseName};";
+                command.ExecuteNonQuery();
+            }
+            message.WriteMessage($"\n{snapshotName} Database: Created");
         }
 
         private void RunOnlyDdlOrDmlScript(Options opts)
         {
             message.WriteMessage(opts.RootPath);
             List<UnexecutedScript> unexecutedScript = (List<UnexecutedScript>)scriptExecutor.GetUnexecutedScripts(opts.RootPath, opts.ConnString);
-            foreach (ScriptExecutionResult result in scriptExecutor.RunBatches(unexecutedScript, opts.ConnString))
+            foreach (ScriptExecutionResult result in scriptExecutor.RunBatches(unexecutedScript, opts.ConnString, opts.SubsituteList))
             {
                 message.WriteMessage(result.ToString());
                 if (!result.IsSuccess)
@@ -54,11 +74,15 @@ namespace DBMProgram.src
         {
             string rootPath = opts.RootPath;
             // validaten parameters
-            if (!(opts.IsValidConn() && opts.IsValidPath()))
+            if (!(opts.IsValidConn() && opts.IsValidPath() && opts.IsValidSubsituteList()))
             {
-                ExitFailureProgram($"Overall Status: failure\n{(opts.IsValidConn() ? "RootPath" : "Connection String")} Argument is not valid", 0);
+                ExitFailureProgram($"Overall Status: failure\n{(opts.IsValidConn() ? null : "<ConnString> or <Dbname>")} {(opts.IsValidPath() ? null : "<RootPath>")} {(opts.IsValidSubsituteList() ? null : "<SubstituteList>")} Argument is not valid", 0);
             }
-            // assert ddl and dml exist     
+            if (opts.IsSnapshot)
+                CreateSnapshotDatabase(opts.ConnString);
+
+            //assert ddl and dml exist
+            message.WriteMessage("\nAutomation Begin:\n");
             opts.RootPath = rootPath + "\\ddl";
             RunOnlyDdlOrDmlScript(opts);
             opts.RootPath = rootPath + "\\dml";
@@ -78,6 +102,12 @@ namespace DBMProgram.src
         [Option('d', "dbname", Required = false, HelpText = "Specific name of Database that contains Version table")]
         public string DbName { get; set; }
 
+        [Option('s', "snapshot", Required = false, HelpText = "Do you want to recover your data?")]
+        public bool IsSnapshot { get; set; }
+
+        [Option('v', "sub", Required = false, HelpText = "Subtitute Variable")]
+        public IEnumerable<string> SubsituteList { get; set; }
+
         public bool IsValidPath()
         {
             string[] subdirectoryEntries = Directory.GetDirectories(RootPath);
@@ -87,20 +117,49 @@ namespace DBMProgram.src
             }
             return false;
         }
+
+        public bool IsValidSubsituteList()
+        {
+            try
+            {
+                foreach (string var in SubsituteList)
+                {
+                    string[] pairedVariable = var.Split(":");
+                    if (pairedVariable.Length != 2)
+                        return false;
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+        }
+
         public bool IsValidConn()
         {
             try
             {
+                SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(ConnString);
                 if (DbName != null)
                 {
-                    SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(ConnString);
                     builder.InitialCatalog = DbName;
                     ConnString = builder.ConnectionString;
                 }
-                SqlConnection sqlCon = new SqlConnection(ConnString);
-                sqlCon.Open();
-                sqlCon.Close();
-                return true;
+                using (SqlConnection sqlCon = new SqlConnection(@ConnString))
+                {
+                    sqlCon.Open();
+                    string command = @"IF EXISTS( SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @table) SELECT 1 ELSE SELECT 0";
+                    using (SqlCommand sqlCommand = new SqlCommand(command, sqlCon))
+                    {
+                        sqlCommand.Parameters.AddWithValue("@table", "version");
+                        if ((int)sqlCommand.ExecuteScalar() != 1)
+                            return false;
+                        return true;
+                    }
+                }
+
             }
             catch (Exception)
             {
@@ -129,7 +188,9 @@ namespace DBMProgram.src
         }
         private static void HandleParseError(IEnumerable<Error> errs)
         {
-            Console.Error.WriteLine("\nOverall Status: unsuccess");
+            UnityContainer ScriptContainer = Factory.ConfigureContainer();
+            ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
+            scriptController.ExitFailureProgram("\nOverall Status: unsuccess", 0);
         }
         public static void Main(string[] args)
         {
@@ -137,7 +198,5 @@ namespace DBMProgram.src
     .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts))
     .WithNotParsed<Options>((errs) => HandleParseError(errs));
         }
-
-
     }
 }

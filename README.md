@@ -2,7 +2,7 @@
 
 Automate deployment of database changes
 
-
+.NET Core Console Application
 
 Database migrations
 
@@ -37,6 +37,7 @@ Outputs:
 listing of scripts that will be applied to the target database in order outputted to STDOUT
 messages from script execution (to STDOUT if successful or STDERR if failed)
 database record of each script execution if successful - overall status of the batch to STDOUT or STERROR (if all successful the sucess else failure)
+
 # Instruction
 
 Cmd Usage
@@ -58,11 +59,9 @@ Cmd Example
 
 ```
 dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Initial Catalog=Version_test;Integrated Security=True;"
-
 ```
 
 ```
-
 dotnet run -r C:\\Users\\szhou\\Desktop\\script --conn "Data source=US-NY-8W1RQ32;Integrated Security=True;" --dbname Version_test
 
 ```

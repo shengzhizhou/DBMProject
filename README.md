@@ -51,6 +51,7 @@ Cmd Usage
 -s, --snapshot    Do you want to recover your data?
 
 -v, --sub         Subtitute Variable
+
 ```
 
 Cmd Example
@@ -82,14 +83,13 @@ In the script you would look for all instances of $var1$ and $var2$ and substitu
 Version Table Sample Schema
 
 ```
-
 CREATE TABLE [dbo].[version](
 	
-[id] [int] IDENTITY(1,1) NOT NULL,
+	[id] [int] IDENTITY(1,1) NOT NULL,
 	
-[script_name] [varchar](50) NULL,
+	[script_name] [varchar](50) NULL,
 	
-[applied_date] [datetime] NULL
+	[applied_date] [datetime] NULL
 ) 
 ON [PRIMARY]
 

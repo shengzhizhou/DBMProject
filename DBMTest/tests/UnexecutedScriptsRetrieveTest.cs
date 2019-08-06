@@ -12,7 +12,7 @@ namespace DBMTest.tests
         readonly bool SuccessResult = true;
 
         [Fact]
-        public void GetAllScripts_CorrectLocalUnexecutedFiles_AssertSuccessResult()
+        public void GetAllScripts_CorrectLocalFiles_AssertSuccessResult()
         {
             UnityContainer ScriptContainer = Factory.ConfigureContainer();
             IScriptExecutor scriptExecutor = ScriptContainer.Resolve<SqlServerScriptExecutor>();

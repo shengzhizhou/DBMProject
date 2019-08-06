@@ -31,7 +31,6 @@ namespace DBMProgram.src
         IEnumerable<UnexecutedScript> GetAllScripts(string rootPath);
         IEnumerable<ExecutedScript> GetExecutedScripts(String connString);
         IEnumerable<string> GetExecutedScriptNames(string connString);
-
     }
 
     public class SqlServerScriptExecutor : IScriptExecutor
@@ -133,7 +132,7 @@ namespace DBMProgram.src
                 }
             }
             unexecutedScript.Sort();
-            message.WriteMessage($"unexecuted Script: {output}\n");
+            message.WriteMessage($"Unexecuted Script: {output}\n");
             return unexecutedScript;
         }
 
@@ -165,8 +164,7 @@ namespace DBMProgram.src
                             output = output + "  " + dataReader.GetValue(nameOrdinal);
 
                         }
-                        message.WriteMessage($"\nexecuted Script: {output}");
-                        //sqlCon.Close();
+                        //message.WriteMessage($"\nExecuted Script: {output}");
                         return executedScript;
                     }
                 }

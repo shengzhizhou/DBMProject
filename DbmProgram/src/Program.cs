@@ -42,15 +42,25 @@ namespace DBMProgram.src
             using (var command = new SqlCommand())
             {
                 command.Connection = sqlCon;
-                command.CommandText = "select physical_name from sys.database_files where type = 0";
+                command.CommandText = "SELECT name,physical_name FROM sys.database_files WHERE type_desc<>'LOG'";
                 sqlCon.Open();
-                string databasePath = command.ExecuteScalar().ToString();
-                string DataDirectory = Path.GetDirectoryName(databasePath);
-                string snapshotFilePath = $"{DataDirectory}\\{databaseName}_Snapshot.ss";
-
-                command.CommandText = $"IF EXISTS  (SELECT name FROM sys.databases WHERE name = '{snapshotName}' ) DROP DATABASE {snapshotName};" +
-                    $"CREATE DATABASE {snapshotName} ON ( " +
-                    $"NAME = {databaseName}, FILENAME = '{snapshotFilePath}' ) AS SNAPSHOT OF {databaseName};";
+                string databaseInfos = "";
+                List<string> nameList = new List<string>();
+                using (SqlDataReader dataReader = command.ExecuteReader())
+                {
+                    while (dataReader.Read())
+                    {
+                        string DataDirectory = Path.GetDirectoryName(dataReader.GetValue(1).ToString());
+                        string dataFileName = dataReader.GetValue(0).ToString();
+                        string dataFilePath = $"{DataDirectory}\\{databaseName}_Snapshot.ss";
+                        databaseInfos += $"(NAME={dataFileName},FILENAME='{dataFilePath}'),";
+                        
+                    }
+                }
+                databaseInfos = databaseInfos.Remove(databaseInfos.Length - 1, 1);
+                command.CommandText = $"IF EXISTS (SELECT name FROM sys.databases WHERE name = '{snapshotName}' ) DROP DATABASE {snapshotName};" +
+                    $"CREATE DATABASE {snapshotName} ON  " +
+                    $"{databaseInfos}  AS SNAPSHOT OF {databaseName};";
                 command.ExecuteNonQuery();
             }
             message.WriteMessage($"\n{snapshotName} Database: Created");
@@ -87,7 +97,7 @@ namespace DBMProgram.src
             RunOnlyDdlOrDmlScript(opts);
             opts.RootPath = rootPath + "\\dml";
             RunOnlyDdlOrDmlScript(opts);
-            ExitSuccessProgram("\nOverall Status: success", 0);
+            ExitSuccessProgram("\nOverall Status: Success", 0);
         }
     }
 
@@ -190,8 +200,9 @@ namespace DBMProgram.src
         {
             UnityContainer ScriptContainer = Factory.ConfigureContainer();
             ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
-            scriptController.ExitFailureProgram("\nOverall Status: unsuccess", 0);
+            scriptController.ExitFailureProgram("\nOverall Status: Unsuccess", 0);
         }
+        [STAThread]
         public static void Main(string[] args)
         {
             CommandLine.Parser.Default.ParseArguments<Options>(args)

@@ -10,61 +10,7 @@ namespace DBMTest.tests
     {
         readonly bool FailurePaser = false;
         readonly bool SuccessParser = true;
-        
-        [Fact]
-        public void CommandLineParser_TwoCorrectArgs_SuccessResult()
-        {
-            string[] args =new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
-            bool result=false;
-            CommandLine.Parser.Default.ParseArguments<Options>(args)
-    .WithParsed<Options>(opts => { result = true; })
-    .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(SuccessParser,result);
-        }
 
-        [Fact]
-        public void CommandLineParser_ThreeCorrectArgs_SuccessResult()
-        {
-            string[] args = new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Integrated Security = True;","--dbname", "Version_test" };
-            bool result = false;
-            CommandLine.Parser.Default.ParseArguments<Options>(args)
-    .WithParsed<Options>(opts => { result = true; })
-    .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(SuccessParser, result);
-        }
-
-        [Fact]
-        public void CommandLineParser_FourCorrectArgs_SuccessResult()
-        {
-            string[] args = new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Integrated Security = True;", "--dbname", "Version_test", "--snapshot" };
-            bool result = false;
-            CommandLine.Parser.Default.ParseArguments<Options>(args)
-    .WithParsed<Options>(opts => { result = true; })
-    .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(SuccessParser, result);
-        }
-
-        [Fact]
-        public void CommandLineParser_FiveCorrectArgs_SuccessResult()
-        {
-            string[] args = new string[] { "-r", "\\ScriptTest", "-c", "Data source = US - NY - 8W1RQ32;Integrated Security = True;", "--dbname", "Version_test", "--snapshot", "--sub", "var1:Version_test var2:test2" };
-            bool result = false;
-            CommandLine.Parser.Default.ParseArguments<Options>(args)
-    .WithParsed<Options>(opts => { result = true; })
-    .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(SuccessParser, result);
-        }
-
-        [Fact]
-        public void CommandLineParser_MissingRootPath_FailureResult()
-        {
-            string[] args = new string[] { "-c", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
-            bool result = false;
-            CommandLine.Parser.Default.ParseArguments<Options>(args)
-    .WithParsed<Options>(opts => { result = true; })
-    .WithNotParsed<Options>((errs) => { result = false; });
-            Assert.Equal(FailurePaser, result);
-        }
 
         [Fact]
         public void CommandLineParser_MissingConnectionString_FailureResult()
@@ -89,7 +35,7 @@ namespace DBMTest.tests
         }
 
         [Fact]
-        public void CommandLineParser_TwoWrongArgs_FailureResult()
+        public void CommandLineParser_WrongRootPathAndConnStringArgs_FailureResult()
         {
             string[] args = new string[] { "-f", "\\script", "-d", "Data source = US - NY - 8W1RQ32;Initial Catalog = Version_test;Integrated Security = True;" };
             bool result = false;

@@ -46,8 +46,9 @@ namespace DBMProgram.src
 
         public void LoadScript()
         {
+            
             string text = File.ReadAllText(FilePath);
-            Batches = text.Split("GO");
+            Batches = Regex.Split(text, "GO", RegexOptions.IgnoreCase);
 
         }
 

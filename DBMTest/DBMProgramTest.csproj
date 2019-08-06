@@ -19,8 +19,4 @@
     <ProjectReference Include="..\DBMProgram\DBMProgram.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ScriptTest\dml\" />
-  </ItemGroup>
-
 </Project>

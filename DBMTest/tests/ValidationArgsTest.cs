@@ -20,15 +20,6 @@ namespace DBMTest.tests
             };
             Assert.Equal(ValidResult, options.IsValidPath());
         }
-        [Fact]
-        public void IsValidPath_RootPathWithoutDDLAndDML_InvalidResult()
-        {
-            Options options = new Options
-            {
-                RootPath = "..\\..\\..\\ScriptTest\\DDL"
-            };
-            Assert.Equal(InvalidResult,options.IsValidPath());
-        }
 
         [Fact]
         public void IsValidSubstituteList_CorrectFormatVariable_ValidResult()

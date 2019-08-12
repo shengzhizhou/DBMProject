@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -9,7 +10,7 @@ namespace DBMProgram.src
 {
     public class ScriptExecutionResult
     {
-        readonly string scriptName;
+        public string scriptName;
         public bool IsSuccess;
         public int rowsEffected;
         public string errorMessage;
@@ -29,8 +30,8 @@ namespace DBMProgram.src
         IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString, IEnumerable<string> substituteList);
         IEnumerable<UnexecutedScript> GetUnexecutedScripts(string rootPath, string connString);
         IEnumerable<UnexecutedScript> GetAllScripts(string rootPath);
-        IEnumerable<ExecutedScript> GetExecutedScripts(String connString);
         IEnumerable<string> GetExecutedScriptNames(string connString);
+        ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString, IEnumerable<string> substituteList);
     }
 
     public class SqlServerScriptExecutor : IScriptExecutor
@@ -39,6 +40,10 @@ namespace DBMProgram.src
         public SqlServerScriptExecutor(IMessageWriter message)
         {
             this.message = message;
+        }
+
+        public SqlServerScriptExecutor()
+        {
         }
 
         //Add unexecuted script file name to Version table
@@ -84,7 +89,7 @@ namespace DBMProgram.src
 
                             using (var command = new SqlCommand(replacedBatch, sqlCon))
                             {
-                                rows += command.ExecuteNonQuery();
+                                rows += command.ExecuteNonQuery() < 0 ? 0 : command.ExecuteNonQuery();
                             }
                         }
                     }
@@ -126,10 +131,16 @@ namespace DBMProgram.src
                 if (!AppliedScript.Contains(script.ScriptName))
                 {
                     script.LoadScript();
+
                     if (!script.IsSkip())
+                    {
+                        
                         unexecutedScript.Add(script);
+                        
+                    }
                     output = output + "  " + script.ScriptName;
                 }
+                script.IsExecuted = true;
             }
             unexecutedScript.Sort();
             message.WriteMessage($"Unexecuted Script: {output}\n");
@@ -139,7 +150,7 @@ namespace DBMProgram.src
         //get all local script file
         public IEnumerable<UnexecutedScript> GetAllScripts(string rootPath)
         {
-            return Directory.GetFiles(rootPath, "*")
+            return Directory.GetFiles(rootPath, "*", SearchOption.AllDirectories)
                 .Select(f => new UnexecutedScript(f));
 
         }
@@ -164,7 +175,6 @@ namespace DBMProgram.src
                             output = output + "  " + dataReader.GetValue(nameOrdinal);
 
                         }
-                        //message.WriteMessage($"\nExecuted Script: {output}");
                         return executedScript;
                     }
                 }
@@ -172,9 +182,5 @@ namespace DBMProgram.src
 
         }
 
-        public IEnumerable<ExecutedScript> GetExecutedScripts(string connString)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

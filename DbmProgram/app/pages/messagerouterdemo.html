@@ -1,0 +1,231 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chromely</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="../Content/js/handlebars-v4.1.2.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <style type="text/css">
+        td {
+            border-bottom: 1px solid black;
+            border-collapse: collapse;
+            vertical-align:middle;
+            font-size:16px
+        }
+
+        /*.selected {
+            background-color: Highlight;
+            color: black;
+        }*/
+
+        .tool {
+            position: relative;
+            width: 400px;
+            cursor: pointer;
+        }
+
+            .tool .tooltiptext {
+                visibility: hidden;
+                width: 380px;
+                background-color: black;
+                color: #fff;
+                text-align: center;
+                border-radius: 6px;
+                padding: 5px 0;
+                /* Position the tooltip */
+                position: absolute;
+                z-index: 1;
+                top: 100%;
+                left: 0%;
+                /*margin-left: -60px;*/
+            }
+
+            .tool:hover .tooltiptext {
+                visibility: visible;
+            }
+    </style>
+
+    <script type="text/javascript">
+
+
+        $(function () {
+            var source = $("#UnexecutedScripts").html();
+            var template = Handlebars.compile(source);
+
+
+            //$('#buttonMessageRouterRun').on('click', showAll);
+            $(function () {
+
+                $('#ScriptRouterResult').html('');
+                $('#result').empty();
+
+                var request = {
+                    "method": "GET",
+                    "url": "/uicontroller/getUnexecuted",
+                    "parameters": null,
+                    "postData": null,
+                };
+                window.cefQuery({
+                    request: JSON.stringify(request),
+                    onSuccess: function (response) {
+                        ScriptRouterResult(response);
+                    }, onFailure: function (err, msg) {
+                        console.log(err, msg);
+                    }
+                });
+
+                var request = {
+                    "method": "GET",
+                    "url": "/uicontroller/getAll",
+                    "parameters": null,
+                    "postData": null,
+                };
+                window.cefQuery({
+                    request: JSON.stringify(request),
+                    onSuccess: function (response) {
+                        messageRouterResult(response);
+                    }, onFailure: function (err, msg) {
+                        console.log(err, msg);
+                    }
+                });
+            });
+
+            function ScriptRouterResult(res) {
+                $('#unexecutedScriptNum').empty();
+                var jsonData = JSON.parse(res);
+
+                var data = jsonData.Data
+                if (data.length > 0) {
+                    var html = template(data);
+                    $('#ScriptRouterResult').html(html);
+                }
+
+                $('#unexecutedScriptNum').append('Not Executed : ' + data.length + ' Scripts ');
+
+                $('#scriptTable tbody tr td .view').click(function () {
+                    var value = $(this).attr("value");
+                    var request = {
+                        "method": "POST",
+                        "url": "/uicontroller/openFile",
+                        "parameters": null,
+                        "postData": value,
+                    };
+
+                    window.cefQuery({
+                        request: JSON.stringify(request),
+                        onSuccess: function (response) {
+                        }, onFailure: function (err, msg) {
+                            console.log(err, msg);
+                        }
+                    });
+                });
+
+
+                $('#scriptTable tbody tr td .run').click(function () {
+                    var value = $(this).attr("value")
+                    var button = $(this);
+                    var request = {
+                        "method": "POST",
+                        "url": "/uicontroller/run",
+                        "parameters": null,
+                        "postData": value,
+                    };
+
+                    window.cefQuery({
+                        request: JSON.stringify(request),
+                        onSuccess: function (response) {
+                            var r = $("#result")[0];
+                            height = r.scrollHeight;
+                            $("#result").scrollTop(height);
+                            var scriptResult = JSON.parse(response).Data;
+                            var text=scriptResult.scriptName+ " : "+ (scriptResult.IsSuccess ? "Success" : "Failure")+"\nRowsEffected : "+scriptResult.rowsEffected+"\n"+(scriptResult.IsSuccess ? '' : scriptResult.errorMessage);
+                            
+                            $("#result").append(text + '\n\n');
+                            if (scriptResult.IsSuccess) {
+                                button.prop("disabled",true);
+                            }
+                        }, onFailure: function (err, msg) {
+                            console.log(err, msg);
+                        }
+                    });
+
+
+                });
+
+
+            }
+
+            function messageRouterResult(res) {
+                $('#allScriptNum').empty();
+                var jsonData = JSON.parse(res);
+                var data = jsonData.Data
+                $('#allScriptNum').append('Discover ' + data + ' Scripts')
+            }
+
+
+        });
+
+
+
+    </script>
+</head>
+<body style="font-family: "Times New Roman", Times, serif;">
+
+    <div class="col-12">
+        <div>
+            <div id="sectionA">
+                <br>
+                <div class="row">
+
+                    <div id="scriptDiscovery" class="col-12" style="font-size:16px">
+                        <!--<div><button id="buttonMessageRouterRun" type="button" class="btn btn-primary btn-sm">Show All</button><br /></div>-->
+                        <p id="allScriptNum" ></p><p id="unexecutedScriptNum"></p>
+                    </div>
+                    <div class="col-12">
+                        <div id="ScriptRouterResult" style="margin-left: auto;margin-right: auto;">
+                            <!-- Output-->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div style="height:10px;"></div>
+        <div>
+            <label> Execution Result:</label>
+            <div></div>
+            <textarea class="form-control" rows="5" id="result" readonly="readonly" style="bottom: 10px;display: flex;"></textarea>
+        </div>
+
+    </div>
+    <script id="UnexecutedScripts" type="text/x-handlebars-template">
+        <table id="scriptTable"  frame="box" class='table-responsive' style="height:270px;">
+            
+            <tbody>
+                {{#each this}}
+                <tr style="height:40px">
+                    <td class="tool" style="width:600px">
+                        {{ScriptName}}
+                        <p class="tooltiptext">{{FilePath}}</p>
+                    </td>
+                    <td style="width:150px">
+                        <button value={{FilePath}} type="button" class="btn btn-outline-primary btn-sm run">Run</button>
+                    </td>
+                    <td style="width:150px">
+                        <button value={{FilePath}} type="button" class="btn btn-outline-info btn-sm view">View</button>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+    </script>
+</body>
+
+</html>

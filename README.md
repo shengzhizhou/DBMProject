@@ -15,18 +15,19 @@ In most cases when we do a deployment of a new code package to an environment we
 
 Inputs:
 
-root folder of where the migration scripts are located. Using the root folder you can form the following two paths: 
- ${root_folder}/ddl
-
- ${root_folder)/dml
+root folder of where the migration scripts are located. 
+~~Using the root folder you can form the following two paths:~~
+~~${root_folder}/ddl~~
+~~${root_folder)/dml~~
 
 connection string of the target database
+
 Algorithm:
 
 obtain an inventory of all scripts in the source folder and cache in an appropriate data structure
 compare the inventory to the list of already executed scripts. These are generally stored in a target database in a  "versions" table. This would be a new table and at a minimum it would need the script name and execution time stamp
 Create a list of all scripts that have not yet been executed in the target database
-Sort the scripts that they are executed in an appropriate order. The ordering is determined using 2 variables: - script type (DDL or DML). DDL scripts should be executed first - naming convention (something to be defined). A good example naming convention would be the following: "[ticket_name]_[execution order]-[description].sql".  Examples: MCRTECH_10101-udpate.sql, MCRTECH-10101.sql. Define a convention to skip a script from automatic execution: XMCRTECH-1111.sql. If the script does not comply with the naming convention then sort it alphabetically after complying scripts in each group (DDL/DML)
+Sort the scripts that they are executed in an appropriate order. The ordering is determined using execution order and must follow the rule that DDL scripts should be executed first - naming convention (something to be defined). A good example naming convention would be the following: "[ticket_name]_[execution order]_[description].sql".  Examples: MCRTECH_10101_udpate.sql, MCRTECH-10101.sql. Define a convention to skip a script from automatic execution: XMCRTECH-1111.sql. If the script does not comply with the naming convention then sort it alphabetically ~~after complying scripts in each group (DDL/DML)~~
 Each script may contain multiple "batches" separated by "GO" statements (https://docs.microsoft.com/en-us/sql/t-sql/language-elements/sql-server-utilities-statements-go?view=sql-server-2017) Since "go" is not actually an sql statement it cannot be executed as sql. It is a directive that this block of sql should be executed separately. So break the script by batch and executed each one separately
 If the execution of all batches in a script is successful then write a record to the "Versions" table
 If execution of any batch fails halt any further processing and output an error with the details (STDERR)
@@ -40,6 +41,18 @@ database record of each script execution if successful - overall status of the b
 
 # Instruction
 
+Download or Clone this Repo to local, switch to DBMProgram directory which contians DBMProgram.csproj
+
+```
+For example,
+
+cd DBMProject\DBMProgram
+
+donet run
+
+```
+
+
 Cmd Usage
 
 ```
@@ -52,6 +65,8 @@ Cmd Usage
 -s, --snapshot    Do you want to recover your data?
 
 -v, --sub         Subtitute Variable
+
+-u, --ui	Running Graphical User Interface
 
 ```
 

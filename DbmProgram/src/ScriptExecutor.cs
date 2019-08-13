@@ -158,7 +158,7 @@ namespace DBMProgram.src
         //retrieve script table from sql server
         public IEnumerable<string> GetExecutedScriptNames(String connString)
         {
-            string sql = $"select * from version";
+            string sql = $"select * from versions";
             using (var sqlCon = new SqlConnection(@connString))
             {
                 using (var command = new SqlCommand(sql, sqlCon))

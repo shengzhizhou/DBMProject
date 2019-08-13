@@ -82,7 +82,7 @@ namespace DBMProgram.src
                     string command = @"IF EXISTS( SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @table) SELECT 1 ELSE SELECT 0";
                     using (SqlCommand sqlCommand = new SqlCommand(command, sqlCon))
                     {
-                        sqlCommand.Parameters.AddWithValue("@table", "version");
+                        sqlCommand.Parameters.AddWithValue("@table", "versions");
                         if ((int)sqlCommand.ExecuteScalar() != 1)
                             return false;
                         return true;

@@ -52,7 +52,7 @@ namespace DBMProgram.src
             using (SqlConnection sqlCon = new SqlConnection(@ConnString))
             {
                 sqlCon.Open();
-                string sql = $"INSERT INTO [dbo].[version]" +
+                string sql = $"INSERT INTO [dbo].[versions]" +
                     $"VALUES (@scriptName,@AppliedDate)";
                 using (SqlCommand command = new SqlCommand(sql, sqlCon))
                 {

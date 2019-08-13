@@ -97,7 +97,7 @@ In the script you would look for all instances of $var1$ and $var2$ and substitu
 Version Table Sample Schema
 
 ```
-CREATE TABLE [dbo].[version](
+CREATE TABLE [dbo].[versions](
 	
 	[id] [int] IDENTITY(1,1) NOT NULL,
 	

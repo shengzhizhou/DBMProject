@@ -15,24 +15,23 @@
         td {
             border-bottom: 1px solid black;
             border-collapse: collapse;
-            vertical-align:middle;
-            font-size:16px
+            vertical-align: middle;
         }
 
-        /*.selected {
+        .selected {
             background-color: Highlight;
             color: black;
-        }*/
+        }
 
         .tool {
             position: relative;
-            width: 400px;
+            /*width: 400px;*/
             cursor: pointer;
         }
 
             .tool .tooltiptext {
                 visibility: hidden;
-                width: 380px;
+                /*width: 400px;*/
                 background-color: black;
                 color: #fff;
                 text-align: center;
@@ -96,8 +95,10 @@
                 });
             });
 
+
+
             function ScriptRouterResult(res) {
-                $('#unexecutedScriptNum').empty();
+
                 var jsonData = JSON.parse(res);
 
                 var data = jsonData.Data
@@ -106,7 +107,7 @@
                     $('#ScriptRouterResult').html(html);
                 }
 
-                $('#unexecutedScriptNum').append('Not Executed : ' + data.length + ' Scripts ');
+                unexecutedScriptNumRouter('New: ' + data.length + ' Scripts ');
 
                 $('#scriptTable tbody tr td .view').click(function () {
                     var value = $(this).attr("value");
@@ -144,11 +145,29 @@
                             height = r.scrollHeight;
                             $("#result").scrollTop(height);
                             var scriptResult = JSON.parse(response).Data;
-                            var text=scriptResult.scriptName+ " : "+ (scriptResult.IsSuccess ? "Success" : "Failure")+"\nRowsEffected : "+scriptResult.rowsEffected+"\n"+(scriptResult.IsSuccess ? '' : scriptResult.errorMessage);
-                            
+                            var text = scriptResult.scriptName + " : " + (scriptResult.IsSuccess ? "Success" : "Failure") + "\nRowsEffected : " + scriptResult.rowsEffected + "\n" + (scriptResult.IsSuccess ? '' : scriptResult.errorMessage);
+
                             $("#result").append(text + '\n\n');
                             if (scriptResult.IsSuccess) {
-                                button.prop("disabled",true);
+                                button.prop("disabled", true);
+                                button.closest('tr').addClass("selected");
+
+                                var request = {
+                                    "method": "GET",
+                                    "url": "/uicontroller/getUnexecuted",
+                                    "parameters": null,
+                                    "postData": null,
+                                };
+                                window.cefQuery({
+                                    request: JSON.stringify(request),
+                                    onSuccess: function (response) {
+                                        var jsonData = JSON.parse(response);
+                                        unexecutedScriptNumRouter('New: ' + jsonData.Data.length + ' Scripts ');
+                                    }, onFailure: function (err, msg) {
+                                        console.log(err, msg);
+                                    }
+                                });
+
                             }
                         }, onFailure: function (err, msg) {
                             console.log(err, msg);
@@ -165,9 +184,13 @@
                 $('#allScriptNum').empty();
                 var jsonData = JSON.parse(res);
                 var data = jsonData.Data
-                $('#allScriptNum').append('Discover ' + data + ' Scripts')
+                $('#allScriptNum').append('Total: ' + data + ' Scripts')
             }
 
+            function unexecutedScriptNumRouter(message) {
+                $('#unexecutedScriptNum').empty();
+                $('#unexecutedScriptNum').append(message);
+            }
 
         });
 
@@ -175,17 +198,15 @@
 
     </script>
 </head>
-<body style="font-family: "Times New Roman", Times, serif;">
+<body style="font-family: Arial, Helvetica, sans-serif;font-size:14px">
 
     <div class="col-12">
         <div>
             <div id="sectionA">
-                <br>
                 <div class="row">
 
-                    <div id="scriptDiscovery" class="col-12" style="font-size:16px">
-                        <!--<div><button id="buttonMessageRouterRun" type="button" class="btn btn-primary btn-sm">Show All</button><br /></div>-->
-                        <p id="allScriptNum" ></p><p id="unexecutedScriptNum"></p>
+                    <div id="scriptDiscovery" class="col-12 row" style="text-align: center; font-size:20px">
+                        <p class="col-6" id="allScriptNum"></p><p class="col-6" id="unexecutedScriptNum"></p>
                     </div>
                     <div class="col-12">
                         <div id="ScriptRouterResult" style="margin-left: auto;margin-right: auto;">
@@ -200,26 +221,35 @@
         <div>
             <label> Execution Result:</label>
             <div></div>
-            <textarea class="form-control" rows="5" id="result" readonly="readonly" style="bottom: 10px;display: flex;"></textarea>
+            <textarea class="form-control" rows="6" id="result" readonly="readonly" style="bottom: 10px;display: flex;font-size:14px"></textarea>
         </div>
 
     </div>
     <script id="UnexecutedScripts" type="text/x-handlebars-template">
-        <table id="scriptTable"  frame="box" class='table-responsive' style="height:270px;">
-            
-            <tbody>
+
+        <table id="scriptTable" frame="box" class='table-responsive' style="height:320px;width:100%">
+
+
+            <tbody font-size:16px>
                 {{#each this}}
-                <tr style="height:40px">
-                    <td class="tool" style="width:600px">
+                <tr style="height:40px;">
+                    <td class="tool" width="100%">
                         {{ScriptName}}
-                        <p class="tooltiptext">{{FilePath}}</p>
+                        <div class="tooltiptext">{{FilePath}}</div>
                     </td>
-                    <td style="width:150px">
-                        <button value={{FilePath}} type="button" class="btn btn-outline-primary btn-sm run">Run</button>
+
+                    <td>
+
+                        <div  style="right:50px;" class="btn-group" aria-label="Basic example">
+                            <button  style="width:100px" value={{FilePath}} type="button" class="btn btn-outline-primary btn-sm run">Run</button>
+                            <button  style="width:100px" value={{FilePath}} type="button" class="btn btn-outline-info btn-sm view">View</button>
+                        </div>
+
                     </td>
-                    <td style="width:150px">
+                    <!--<td style="width:150px">
                         <button value={{FilePath}} type="button" class="btn btn-outline-info btn-sm view">View</button>
-                    </td>
+                    </td>-->
+                    
                 </tr>
                 {{/each}}
             </tbody>

@@ -27,10 +27,8 @@ namespace DBMProgram.src
             if (notepad != null)
             {
                 notepad.WaitForInputIdle();
-
                 if (!string.IsNullOrEmpty(title))
                     SetWindowText(notepad.MainWindowHandle, title);
-
                 if (!string.IsNullOrEmpty(message))
                 {
                     IntPtr child = FindWindowEx(notepad.MainWindowHandle, new IntPtr(0), "Edit", null);

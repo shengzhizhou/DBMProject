@@ -5,7 +5,6 @@ using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using Chromely.Core.RestfulService;
 
-
 namespace DBMProgram.src
 {
     
@@ -17,7 +16,6 @@ namespace DBMProgram.src
         {
             this.message = message;
             this.scriptExecutor = scriptExecutor;
-            
         }
 
         public void ExitSuccessProgram(string exitMessage, int exitCode)

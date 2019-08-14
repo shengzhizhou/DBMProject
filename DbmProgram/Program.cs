@@ -63,7 +63,6 @@ namespace DBMProgram.src
             {
                 return false;
             }
-
         }
 
         public bool IsValidConn()
@@ -88,7 +87,6 @@ namespace DBMProgram.src
                         return true;
                     }
                 }
-
             }
             catch (Exception)
             {

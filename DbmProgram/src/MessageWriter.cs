@@ -7,9 +7,7 @@ namespace DBMProgram.src
     public interface IMessageWriter
     {
         void WriteMessage(string message);
-
         void WriteError(string error);
-
     }
 
     public class ConsoleMessageWriter : IMessageWriter
@@ -18,23 +16,18 @@ namespace DBMProgram.src
         {
             Console.Error.WriteLine(error);
         }
-
         public void WriteMessage(string message)
         {
             Console.WriteLine(message);
         }
-
-        
     }
 
     public class NullMessageWriter : IMessageWriter
     {
-
         public void WriteError(string error)
         {
             throw new NotImplementedException();
         }
-
         public void WriteMessage(string message)
         {
             throw new NotImplementedException();
@@ -43,12 +36,10 @@ namespace DBMProgram.src
 
     public class AwsCloudWatchMessageWriter : IMessageWriter
     {
-
         public void WriteError(string error)
         {
             throw new NotImplementedException();
         }
-
         public void WriteMessage(string message)
         {
             throw new NotImplementedException();

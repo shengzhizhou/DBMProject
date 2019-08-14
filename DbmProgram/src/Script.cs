@@ -37,12 +37,12 @@ namespace DBMProgram.src
             Description = ScriptName.Substring(secondUnderscore);
         }
 
-
         public bool IsMatchesNameConvention()
         {
             Regex rgx = new Regex(@"^([a-zA-Z0-9]+)(_\d+)(_[a-zA-Z0-9]+)$");
             return rgx.IsMatch(ScriptName);
         }
+
         public bool IsSkip()
         {
             return ScriptName.StartsWith('X') || ScriptName.StartsWith('x');
@@ -50,12 +50,10 @@ namespace DBMProgram.src
 
         public void LoadScript()
         {
-            
             string text = File.ReadAllText(FilePath);
             Batches = Regex.Split(text, "GO", RegexOptions.IgnoreCase);
 
         }
-
 
         public int CompareTo(UnexecutedScript script2)
         {

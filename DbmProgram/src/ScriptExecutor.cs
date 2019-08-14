@@ -14,7 +14,6 @@ namespace DBMProgram.src
         public bool IsSuccess;
         public int rowsEffected;
         public string errorMessage;
-
         public ScriptExecutionResult(string scriptName)
         {
             this.scriptName = scriptName;
@@ -41,11 +40,6 @@ namespace DBMProgram.src
         {
             this.message = message;
         }
-
-        public SqlServerScriptExecutor()
-        {
-        }
-
         //Add unexecuted script file name to Version table
         public void AddScriptRecords(UnexecutedScript scripts, string ConnString)
         {
@@ -68,7 +62,6 @@ namespace DBMProgram.src
         public ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString, IEnumerable<string> substituteList)
         {
             var executionResult = new ScriptExecutionResult(script.ScriptName);
-
             try
             {
                 using (var sqlCon = new SqlConnection(@ConnString))
@@ -173,7 +166,6 @@ namespace DBMProgram.src
                             int nameOrdinal = dataReader.GetOrdinal("script_name");
                             executedScript.Add(dataReader.GetValue(nameOrdinal).ToString());
                             output = output + "  " + dataReader.GetValue(nameOrdinal);
-
                         }
                         return executedScript;
                     }

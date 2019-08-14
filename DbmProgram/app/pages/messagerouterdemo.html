@@ -51,15 +51,11 @@
         $(function () {
             var source = $("#UnexecutedScripts").html();
             var template = Handlebars.compile(source);
-
-            $(function () {
-                $('#ScriptRouterResult').html('');
-                $('#result').empty();
-                RouterUnexecutedResult();
-                RouterAllScriptResult();
-            });
-
-            function RouterUnexecutedResult() {
+            $('#ScriptRouterResult').html('');
+            $('#result').empty();
+            routerUnexecutedResult();
+            routerAllScriptResult();
+            function routerUnexecutedResult() {
                 var request = {
                     "method": "GET",
                     "url": "/uicontroller/getUnexecuted",
@@ -76,7 +72,7 @@
                 });
             }
 
-            function RouterAllScriptResult() {
+            function routerAllScriptResult() {
                 var request = {
                     "method": "GET",
                     "url": "/uicontroller/getAll",
@@ -107,7 +103,7 @@
                     var html = template(data);
                     $('#ScriptRouterResult').html(html);
                 }
-                RenderunexecutedScriptNum('New: ' + data.length + ' Scripts ');
+                renderunexecutedScriptNum('New: ' + data.length + ' Scripts ');
                 $('#scriptTable .view').click(function () {
                     var value = $(this).attr("value");
                     openFile(value);
@@ -128,8 +124,7 @@
                 };
                 window.cefQuery({
                     request: JSON.stringify(request),
-                    onSuccess: function (response) {
-                    }, onFailure: function (err, msg) {
+                    onFailure: function (err, msg) {
                         console.log(err, msg);
                     }
                 });
@@ -146,14 +141,14 @@
                     request: JSON.stringify(request),
                     onSuccess: function (response) {
                         var jsonData = JSON.parse(response);
-                        RenderunexecutedScriptNum('New: ' + jsonData.Data.length + ' Scripts ');
+                        renderunexecutedScriptNum('New: ' + jsonData.Data.length + ' Scripts ');
                     }, onFailure: function (err, msg) {
                         console.log(err, msg);
                     }
                 });
             }
 
-            function NavigateScrollBar() {
+            function navigateScrollBar() {
                 var r = $("#result")[0];
                 height = r.scrollHeight;
                 $("#result").scrollTop(height);
@@ -173,12 +168,12 @@
                 window.cefQuery({
                     request: JSON.stringify(request),
                     onSuccess: function (response) {
-                        NavigateScrollBar();
+                        navigateScrollBar();
                         var scriptResult = JSON.parse(response).Data;
                         appendExecutionResult(scriptResult);
                         if (scriptResult.IsSuccess) {
-                            button.prop("disabled", true);
-                            button.closest('tr').addClass("selected");
+                            disableButton(button);
+                            highlightRow(button);
                             updateUnexecutedScriptNum();
                         }
                     }, onFailure: function (err, msg) {
@@ -187,16 +182,23 @@
                 });
             }
 
-            function RenderunexecutedScriptNum(message) {
+            function disableButton(button) {
+                button.prop("disabled", true);
+            }
+
+            function highlightRow(button) { 
+                button.closest('tr').addClass("selected");
+            }
+
+            function renderunexecutedScriptNum(message) {
                 $('#unexecutedScriptNum').empty();
                 $('#unexecutedScriptNum').append(message);
             }
-
+            
         });
     </script>
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif;font-size:14px">
-
     <div class="col-12">
         <div>
             <div id="sectionA">

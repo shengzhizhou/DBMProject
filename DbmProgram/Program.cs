@@ -40,7 +40,7 @@ namespace DBMProgram.src
         {
             int fileNum = Directory.GetFiles(RootPath, "*", SearchOption.AllDirectories).Length;
 
-            if (fileNum>0)
+            if (fileNum > 0)
             {
                 return true;
             }
@@ -96,7 +96,8 @@ namespace DBMProgram.src
             }
         }
     }
-    public class ConfigService {
+    public class ConfigService
+    {
         private static ConfigService config;
         public Options opts;
         public IScriptExecutor scriptExecutor;
@@ -108,13 +109,13 @@ namespace DBMProgram.src
         public void SetUp(Options opts)
         {
             this.opts = opts;
-            UnityContainer ScriptContainer = Factory.ConfigureContainer();
-            this.scriptExecutor= ScriptContainer.Resolve<IScriptExecutor>();
+            UnityContainer ScriptContainer = ContainerFactory.ConfigureContainer();
+            this.scriptExecutor = ScriptContainer.Resolve<IScriptExecutor>();
         }
 
     }
 
-    public class Factory
+    public class ContainerFactory
     {
         public static UnityContainer ConfigureContainer()
         {
@@ -125,74 +126,101 @@ namespace DBMProgram.src
         }
     }
 
-    class Program
+    class ArgumentController
     {
-        private static void RunOptionsAndReturnExitCode(Options opts, string[] args)
+        private Options opts;
+        private ScriptController scriptController;
+        public ArgumentController(Options opts, ScriptController scriptController)
         {
-            UnityContainer ScriptContainer = Factory.ConfigureContainer();
-            ScriptContainer.RegisterInstance(opts);
-            ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
-            ConfigService configService = ConfigService.getConfig();
-            configService.SetUp(opts);
-            string rootPath = opts.RootPath;
-            // validaten parameters
+            this.scriptController = scriptController;
+            this.opts = opts;
+        }
+        public void CheckArgsValidation()
+        {
             if (!(opts.IsValidConn() && opts.IsValidPath() && opts.IsValidSubsituteList()))
             {
                 scriptController.ExitFailureProgram($"Overall Status: failure\n{(opts.IsValidConn() ? null : "<ConnString> or <Dbname>")} {(opts.IsValidPath() ? null : "<RootPath>")} {(opts.IsValidSubsituteList() ? null : "<SubstituteList>")} Argument is not valid", 0);
             }
+        }
+        private void RunOnConsole()
+        {
+            scriptController.RunScript(opts);
+        }
+        private void ShowUI(string[] args)
+        {
+            try
+            {
+                HostHelpers.SetupDefaultExceptionHandlers();
+                var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                var startUrl = "file:///app/pages/messagerouterdemo.html";
+                var config = ChromelyConfiguration
+                                 .Create()
+                                 .WithHostMode(WindowState.Normal)
+                                 .WithHostTitle("DBMProject")
+                                 .WithHostIconFile("chromely.ico")
+                                 .WithHostBounds(1350, 834)
+                                 .WithAppArgs(args)
+                                 .UseDefaultResourceSchemeHandler("local", string.Empty)
+                                 .WithLogSeverity(LogSeverity.Info)
+                                .UseDefaultLogger("logs\\chromely_new.log")
+                                .UseDefaultHttpSchemeHandler("http", "chromely.com")
+                                  // .NET Core may not run in debug mode without publishing to exe
+                                  // To overcome that, a subprocess need to be set.
+                                  //.WithCustomSetting(CefSettingKeys.BrowserSubprocessPath, path_to_subprocess)
+                                  .WithStartUrl(startUrl);
+
+                using (var window = ChromelyWindow.Create(config))
+                {
+                    window.RegisterUrlScheme(new UrlScheme("https://github.com/chromelyapps/Chromely", true));
+                    window.RegisterServiceAssembly(Assembly.GetExecutingAssembly());
+                    window.ScanAssemblies();
+                    window.Run(args);
+                }
+            }
+            catch (Exception exception)
+            {
+                scriptController.ExitFailureProgram($"\nOverall Status: Unsuccess\n{exception}", 0);
+            }
+        }
+        public void RunArgs(string[] args)
+        {
             if (opts.IsSnapshot)
                 scriptController.CreateSnapshotDatabase(opts.ConnString);
-            if (opts.IsRunningUI) {
-                try
-                {
-                    HostHelpers.SetupDefaultExceptionHandlers();
-                    var appDirectory = AppDomain.CurrentDomain.BaseDirectory;
-                    var startUrl = "file:///app/pages/messagerouterdemo.html";
-                    var config = ChromelyConfiguration
-                                     .Create()
-                                     .WithHostMode(WindowState.Normal)
-                                     .WithHostTitle("DBMProject")
-                                     .WithHostIconFile("chromely.ico")
-                                     .WithHostBounds(1350, 834)
-                                     .WithAppArgs(args)
-                                     .UseDefaultResourceSchemeHandler("local", string.Empty)
-                                     .WithLogSeverity(LogSeverity.Info)
-                                    .UseDefaultLogger("logs\\chromely_new.log")
-                                    .UseDefaultHttpSchemeHandler("http", "chromely.com")
-                                      // .NET Core may not run in debug mode without publishing to exe
-                                      // To overcome that, a subprocess need to be set.
-                                      //.WithCustomSetting(CefSettingKeys.BrowserSubprocessPath, path_to_subprocess)
-                                      .WithStartUrl(startUrl);
-
-                    using (var window = ChromelyWindow.Create(config))
-                    {
-                        window.RegisterUrlScheme(new UrlScheme("https://github.com/chromelyapps/Chromely", true));
-                        window.RegisterServiceAssembly(Assembly.GetExecutingAssembly());
-                        window.ScanAssemblies();
-                        
-                        window.Run(args);
-                    }
-                }
-                catch (Exception exception)
-                {
-                    scriptController.ExitFailureProgram($"\nOverall Status: Unsuccess\n{exception}", 0);
-                }
+            if (!opts.IsRunningUI)
+            {
+                RunOnConsole();
             }
             else
             {
-                scriptController.RunScript(opts);
+                ShowUI(args);
             }
+        }
+    }
+
+
+    class Program
+    {
+        private static void RunOptionsAndReturnExitCode(Options opts, string[] args)
+        {
+            UnityContainer ScriptContainer = ContainerFactory.ConfigureContainer();
+            ScriptContainer.RegisterInstance(opts);
+            ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
+            ConfigService configService = ConfigService.getConfig();
+            configService.SetUp(opts);
+            ArgumentController argumentController = new ArgumentController(opts, scriptController);
+            argumentController.CheckArgsValidation();
+            argumentController.RunArgs(args);
         }
         private static void HandleParseError(IEnumerable<Error> errs)
         {
-            UnityContainer ScriptContainer = Factory.ConfigureContainer();
+            UnityContainer ScriptContainer = ContainerFactory.ConfigureContainer();
             ScriptController scriptController = ScriptContainer.Resolve<ScriptController>();
             scriptController.ExitFailureProgram("\nOverall Status: Unsuccess", 0);
         }
         public static void Main(string[] args)
         {
             CommandLine.Parser.Default.ParseArguments<Options>(args)
-        .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts,args))
+        .WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts, args))
         .WithNotParsed<Options>((errs) => HandleParseError(errs));
         }
     }

@@ -13,19 +13,10 @@ namespace DBMProgram.src
     {
         private readonly IMessageWriter message;
         public readonly IScriptExecutor scriptExecutor;
-        private Options opts;
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ScriptController"/> class.
-        /// </summary>
-        /// 
-        //public void SetUpArgs(Options opts) {
-        //    this.opts = opts;
-        //}
-        public ScriptController(IMessageWriter message, IScriptExecutor scriptExecutor, Options opts)
+        public ScriptController(IMessageWriter message, IScriptExecutor scriptExecutor)
         {
             this.message = message;
             this.scriptExecutor = scriptExecutor;
-            this.opts = opts;
             
         }
 

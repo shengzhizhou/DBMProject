@@ -61,9 +61,8 @@ namespace DBMProgram.src
             var scriptExecutor = ConfigService.getConfig().scriptExecutor;
             script.LoadScript();
             var result = scriptExecutor.RunSignleScriptBatchs(script, opts.ConnString, opts.SubsituteList);
-
             var response = new ChromelyResponse(request.Id);
-            response.Data = result;//.ToString() + $"{(result.IsSuccess ? null : result.errorMessage)}";
+            response.Data = result;
 
             return response;
         }

@@ -25,13 +25,11 @@
 
         .tool {
             position: relative;
-            /*width: 400px;*/
             cursor: pointer;
         }
 
             .tool .tooltiptext {
                 visibility: hidden;
-                /*width: 400px;*/
                 background-color: black;
                 color: #fff;
                 text-align: center;
@@ -42,7 +40,6 @@
                 z-index: 1;
                 top: 100%;
                 left: 0%;
-                /*margin-left: -60px;*/
             }
 
             .tool:hover .tooltiptext {
@@ -51,19 +48,18 @@
     </style>
 
     <script type="text/javascript">
-
-
         $(function () {
             var source = $("#UnexecutedScripts").html();
             var template = Handlebars.compile(source);
 
-
-            //$('#buttonMessageRouterRun').on('click', showAll);
             $(function () {
-
                 $('#ScriptRouterResult').html('');
                 $('#result').empty();
+                RouterUnexecutedResult();
+                RouterAllScriptResult();
+            });
 
+            function RouterUnexecutedResult() {
                 var request = {
                     "method": "GET",
                     "url": "/uicontroller/getUnexecuted",
@@ -73,12 +69,14 @@
                 window.cefQuery({
                     request: JSON.stringify(request),
                     onSuccess: function (response) {
-                        ScriptRouterResult(response);
+                        scriptRouterResult(response);
                     }, onFailure: function (err, msg) {
                         console.log(err, msg);
                     }
                 });
+            }
 
+            function RouterAllScriptResult() {
                 var request = {
                     "method": "GET",
                     "url": "/uicontroller/getAll",
@@ -93,91 +91,6 @@
                         console.log(err, msg);
                     }
                 });
-            });
-
-
-
-            function ScriptRouterResult(res) {
-
-                var jsonData = JSON.parse(res);
-
-                var data = jsonData.Data
-                if (data.length > 0) {
-                    var html = template(data);
-                    $('#ScriptRouterResult').html(html);
-                }
-
-                unexecutedScriptNumRouter('New: ' + data.length + ' Scripts ');
-
-                $('#scriptTable tbody tr td .view').click(function () {
-                    var value = $(this).attr("value");
-                    var request = {
-                        "method": "POST",
-                        "url": "/uicontroller/openFile",
-                        "parameters": null,
-                        "postData": value,
-                    };
-
-                    window.cefQuery({
-                        request: JSON.stringify(request),
-                        onSuccess: function (response) {
-                        }, onFailure: function (err, msg) {
-                            console.log(err, msg);
-                        }
-                    });
-                });
-
-
-                $('#scriptTable tbody tr td .run').click(function () {
-                    var value = $(this).attr("value")
-                    var button = $(this);
-                    var request = {
-                        "method": "POST",
-                        "url": "/uicontroller/run",
-                        "parameters": null,
-                        "postData": value,
-                    };
-
-                    window.cefQuery({
-                        request: JSON.stringify(request),
-                        onSuccess: function (response) {
-                            var r = $("#result")[0];
-                            height = r.scrollHeight;
-                            $("#result").scrollTop(height);
-                            var scriptResult = JSON.parse(response).Data;
-                            var text = scriptResult.scriptName + " : " + (scriptResult.IsSuccess ? "Success" : "Failure") + "\nRowsEffected : " + scriptResult.rowsEffected + "\n" + (scriptResult.IsSuccess ? '' : scriptResult.errorMessage);
-
-                            $("#result").append(text + '\n\n');
-                            if (scriptResult.IsSuccess) {
-                                button.prop("disabled", true);
-                                button.closest('tr').addClass("selected");
-
-                                var request = {
-                                    "method": "GET",
-                                    "url": "/uicontroller/getUnexecuted",
-                                    "parameters": null,
-                                    "postData": null,
-                                };
-                                window.cefQuery({
-                                    request: JSON.stringify(request),
-                                    onSuccess: function (response) {
-                                        var jsonData = JSON.parse(response);
-                                        unexecutedScriptNumRouter('New: ' + jsonData.Data.length + ' Scripts ');
-                                    }, onFailure: function (err, msg) {
-                                        console.log(err, msg);
-                                    }
-                                });
-
-                            }
-                        }, onFailure: function (err, msg) {
-                            console.log(err, msg);
-                        }
-                    });
-
-
-                });
-
-
             }
 
             function messageRouterResult(res) {
@@ -187,7 +100,94 @@
                 $('#allScriptNum').append('Total: ' + data + ' Scripts')
             }
 
-            function unexecutedScriptNumRouter(message) {
+            function scriptRouterResult(res) {
+                var jsonData = JSON.parse(res);
+                var data = jsonData.Data
+                if (data.length > 0) {
+                    var html = template(data);
+                    $('#ScriptRouterResult').html(html);
+                }
+                RenderunexecutedScriptNum('New: ' + data.length + ' Scripts ');
+                $('#scriptTable .view').click(function () {
+                    var value = $(this).attr("value");
+                    openFile(value);
+                });
+                $('#scriptTable .run').click(function () {
+                    var value = $(this).attr("value")
+                    var button = $(this);
+                    runScript(button, value);
+                });
+            }
+
+            function openFile(value) {
+                var request = {
+                    "method": "POST",
+                    "url": "/uicontroller/openFile",
+                    "parameters": null,
+                    "postData": value,
+                };
+                window.cefQuery({
+                    request: JSON.stringify(request),
+                    onSuccess: function (response) {
+                    }, onFailure: function (err, msg) {
+                        console.log(err, msg);
+                    }
+                });
+            }
+
+            function updateUnexecutedScriptNum() {
+                var request = {
+                    "method": "GET",
+                    "url": "/uicontroller/getUnexecuted",
+                    "parameters": null,
+                    "postData": null,
+                };
+                window.cefQuery({
+                    request: JSON.stringify(request),
+                    onSuccess: function (response) {
+                        var jsonData = JSON.parse(response);
+                        RenderunexecutedScriptNum('New: ' + jsonData.Data.length + ' Scripts ');
+                    }, onFailure: function (err, msg) {
+                        console.log(err, msg);
+                    }
+                });
+            }
+
+            function NavigateScrollBar() {
+                var r = $("#result")[0];
+                height = r.scrollHeight;
+                $("#result").scrollTop(height);
+            }
+            function appendExecutionResult(scriptResult) {
+                var text = scriptResult.scriptName + " : " + (scriptResult.IsSuccess ? "Success" : "Failure") + "\nRowsEffected : " + scriptResult.rowsEffected + "\n" + (scriptResult.IsSuccess ? '' : scriptResult.errorMessage);
+                $("#result").append(text + '\n\n');
+            }
+
+            function runScript(button, value) {
+                var request = {
+                    "method": "POST",
+                    "url": "/uicontroller/run",
+                    "parameters": null,
+                    "postData": value,
+                };
+                window.cefQuery({
+                    request: JSON.stringify(request),
+                    onSuccess: function (response) {
+                        NavigateScrollBar();
+                        var scriptResult = JSON.parse(response).Data;
+                        appendExecutionResult(scriptResult);
+                        if (scriptResult.IsSuccess) {
+                            button.prop("disabled", true);
+                            button.closest('tr').addClass("selected");
+                            updateUnexecutedScriptNum();
+                        }
+                    }, onFailure: function (err, msg) {
+                        console.log(err, msg);
+                    }
+                });
+            }
+
+            function RenderunexecutedScriptNum(message) {
                 $('#unexecutedScriptNum').empty();
                 $('#unexecutedScriptNum').append(message);
             }
@@ -204,7 +204,6 @@
         <div>
             <div id="sectionA">
                 <div class="row">
-
                     <div id="scriptDiscovery" class="col-12 row" style="text-align: center; font-size:20px">
                         <p class="col-6" id="allScriptNum"></p><p class="col-6" id="unexecutedScriptNum"></p>
                     </div>
@@ -226,10 +225,7 @@
 
     </div>
     <script id="UnexecutedScripts" type="text/x-handlebars-template">
-
         <table id="scriptTable" frame="box" class='table-responsive' style="height:320px;width:100%">
-
-
             <tbody font-size:16px>
                 {{#each this}}
                 <tr style="height:40px;">
@@ -237,19 +233,12 @@
                         {{ScriptName}}
                         <div class="tooltiptext">{{FilePath}}</div>
                     </td>
-
                     <td>
-
-                        <div  style="right:50px;" class="btn-group" aria-label="Basic example">
-                            <button  style="width:100px" value={{FilePath}} type="button" class="btn btn-outline-primary btn-sm run">Run</button>
-                            <button  style="width:100px" value={{FilePath}} type="button" class="btn btn-outline-info btn-sm view">View</button>
+                        <div style="right:50px;" class="btn-group" aria-label="Basic example">
+                            <button style="width:100px" value={{FilePath}} type="button" class="btn btn-outline-primary btn-sm run">Run</button>
+                            <button style="width:100px" value={{FilePath}} type="button" class="btn btn-outline-info btn-sm view">View</button>
                         </div>
-
                     </td>
-                    <!--<td style="width:150px">
-                        <button value={{FilePath}} type="button" class="btn btn-outline-info btn-sm view">View</button>
-                    </td>-->
-                    
                 </tr>
                 {{/each}}
             </tbody>

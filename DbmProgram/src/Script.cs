@@ -5,10 +5,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace DBMProgram.src
-{
+{ 
     public class UnexecutedScript : IComparable<UnexecutedScript>
     {
-        readonly string FilePath;
+        public string FilePath;
+        public bool IsExecuted = false;
         public string ScriptName { get; set; }
         public string[] Batches;
         private int ExecutionOrder;
@@ -28,17 +29,20 @@ namespace DBMProgram.src
         }
         private void SplitNameByConvention()
         {
-            TicketName = ScriptName.Substring(0, ScriptName.IndexOf('_'));
-            ExecutionOrder = Convert.ToInt32(ScriptName.Substring(ScriptName.IndexOf('_') + 1, ScriptName.IndexOf('-') - ScriptName.IndexOf('_') - 1));
-            Description = ScriptName.Substring(ScriptName.IndexOf('-'));
+            int firstUnderscore = ScriptName.IndexOf('_');
+            int secondUnderscore= ScriptName.IndexOf('_',firstUnderscore+1);
+            
+            TicketName = ScriptName.Substring(0, firstUnderscore);
+            ExecutionOrder = Convert.ToInt32(ScriptName.Substring(firstUnderscore + 1, secondUnderscore - firstUnderscore - 1));
+            Description = ScriptName.Substring(secondUnderscore);
         }
-
 
         public bool IsMatchesNameConvention()
         {
-            Regex rgx = new Regex(@"^([a-zA-Z0-9]+)(_\d+)(-[a-zA-Z0-9]+)$");
+            Regex rgx = new Regex(@"^([a-zA-Z0-9]+)(_\d+)(_[a-zA-Z0-9]+)$");
             return rgx.IsMatch(ScriptName);
         }
+
         public bool IsSkip()
         {
             return ScriptName.StartsWith('X') || ScriptName.StartsWith('x');
@@ -46,12 +50,10 @@ namespace DBMProgram.src
 
         public void LoadScript()
         {
-            
             string text = File.ReadAllText(FilePath);
             Batches = Regex.Split(text, "GO", RegexOptions.IgnoreCase);
 
         }
-
 
         public int CompareTo(UnexecutedScript script2)
         {

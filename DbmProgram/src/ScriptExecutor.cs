@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -9,11 +10,10 @@ namespace DBMProgram.src
 {
     public class ScriptExecutionResult
     {
-        readonly string scriptName;
+        public string scriptName;
         public bool IsSuccess;
         public int rowsEffected;
         public string errorMessage;
-
         public ScriptExecutionResult(string scriptName)
         {
             this.scriptName = scriptName;
@@ -29,8 +29,8 @@ namespace DBMProgram.src
         IEnumerable<ScriptExecutionResult> RunBatches(List<UnexecutedScript> unexecutedScripts, string ConnString, IEnumerable<string> substituteList);
         IEnumerable<UnexecutedScript> GetUnexecutedScripts(string rootPath, string connString);
         IEnumerable<UnexecutedScript> GetAllScripts(string rootPath);
-        IEnumerable<ExecutedScript> GetExecutedScripts(String connString);
         IEnumerable<string> GetExecutedScriptNames(string connString);
+        ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString, IEnumerable<string> substituteList);
     }
 
     public class SqlServerScriptExecutor : IScriptExecutor
@@ -40,14 +40,13 @@ namespace DBMProgram.src
         {
             this.message = message;
         }
-
         //Add unexecuted script file name to Version table
         public void AddScriptRecords(UnexecutedScript scripts, string ConnString)
         {
             using (SqlConnection sqlCon = new SqlConnection(@ConnString))
             {
                 sqlCon.Open();
-                string sql = $"INSERT INTO [dbo].[version]" +
+                string sql = $"INSERT INTO [dbo].[versions]" +
                     $"VALUES (@scriptName,@AppliedDate)";
                 using (SqlCommand command = new SqlCommand(sql, sqlCon))
                 {
@@ -63,7 +62,6 @@ namespace DBMProgram.src
         public ScriptExecutionResult RunSignleScriptBatchs(UnexecutedScript script, string ConnString, IEnumerable<string> substituteList)
         {
             var executionResult = new ScriptExecutionResult(script.ScriptName);
-
             try
             {
                 using (var sqlCon = new SqlConnection(@ConnString))
@@ -84,7 +82,7 @@ namespace DBMProgram.src
 
                             using (var command = new SqlCommand(replacedBatch, sqlCon))
                             {
-                                rows += command.ExecuteNonQuery();
+                                rows += command.ExecuteNonQuery() < 0 ? 0 : command.ExecuteNonQuery();
                             }
                         }
                     }
@@ -126,10 +124,16 @@ namespace DBMProgram.src
                 if (!AppliedScript.Contains(script.ScriptName))
                 {
                     script.LoadScript();
+
                     if (!script.IsSkip())
+                    {
+                        
                         unexecutedScript.Add(script);
+                        
+                    }
                     output = output + "  " + script.ScriptName;
                 }
+                script.IsExecuted = true;
             }
             unexecutedScript.Sort();
             message.WriteMessage($"Unexecuted Script: {output}\n");
@@ -139,7 +143,7 @@ namespace DBMProgram.src
         //get all local script file
         public IEnumerable<UnexecutedScript> GetAllScripts(string rootPath)
         {
-            return Directory.GetFiles(rootPath, "*")
+            return Directory.GetFiles(rootPath, "*", SearchOption.AllDirectories)
                 .Select(f => new UnexecutedScript(f));
 
         }
@@ -147,7 +151,7 @@ namespace DBMProgram.src
         //retrieve script table from sql server
         public IEnumerable<string> GetExecutedScriptNames(String connString)
         {
-            string sql = $"select * from version";
+            string sql = $"select * from versions";
             using (var sqlCon = new SqlConnection(@connString))
             {
                 using (var command = new SqlCommand(sql, sqlCon))
@@ -162,9 +166,7 @@ namespace DBMProgram.src
                             int nameOrdinal = dataReader.GetOrdinal("script_name");
                             executedScript.Add(dataReader.GetValue(nameOrdinal).ToString());
                             output = output + "  " + dataReader.GetValue(nameOrdinal);
-
                         }
-                        //message.WriteMessage($"\nExecuted Script: {output}");
                         return executedScript;
                     }
                 }
@@ -172,9 +174,5 @@ namespace DBMProgram.src
 
         }
 
-        public IEnumerable<ExecutedScript> GetExecutedScripts(string connString)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

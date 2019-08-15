@@ -14,7 +14,7 @@ namespace DBMTest.tests
         [Fact]
         public void GetAllScripts_CorrectLocalFiles_AssertSuccessResult()
         {
-            UnityContainer ScriptContainer = Factory.ConfigureContainer();
+            UnityContainer ScriptContainer = ContainerFactory.ConfigureContainer();
             IScriptExecutor scriptExecutor = ScriptContainer.Resolve<SqlServerScriptExecutor>();
             foreach (UnexecutedScript script in scriptExecutor.GetAllScripts(subDirPath)) {
                 if (!(script.ScriptName == "newScript"||script.ScriptName == "script_1" || script.ScriptName == "script_2"))

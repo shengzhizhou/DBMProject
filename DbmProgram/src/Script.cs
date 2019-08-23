@@ -39,7 +39,7 @@ namespace DBMProgram.src
 
         public bool IsMatchesNameConvention()
         {
-            Regex rgx = new Regex(@"^([a-zA-Z0-9]+)(_\d+)(_[a-zA-Z0-9]+)$");
+            Regex rgx = new Regex(@"^([a-zA-Z0-9-]+)(_\d+)(_[a-zA-Z0-9]+)$");
             return rgx.IsMatch(ScriptName);
         }
 
